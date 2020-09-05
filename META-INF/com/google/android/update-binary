@@ -26,6 +26,114 @@ delete(){ rm -rf "$@"; }
 cdir(){ mkdir -p "$@"; }
 abort(){ print "$1"; exit 1; }
 
+#
+printlog(){
+	print "$1"
+	if [ "$1" != " " ]; then
+	echo "$1 [$(date '+%d/%m/%Y %H:%M:%S')]" >> $log
+	echo "$1 [$(date '+%d/%m/%Y %H:%M:%S')]" >> $loglive
+	else
+	print "$1" >> $log
+	echo "$1" >> $loglive
+	fi
+	}
+sedlog(){
+	echo "[Processing]  $1 [$(date '+%d/%m/%Y %H:%M:%S')]" >> $log
+	echo "[Processing]  $1 [$(date '+%d/%m/%Y %H:%M:%S')]" >> $loglive
+	}
+#
+while_log(){
+	echo "$1" | tee -a $log
+	}
+listlog(){
+	echo " " >> $log
+	echo "---------- Folder List : $1 ----------" >> $log
+	echo " " >> $loglive
+	echo "---------- Folder List : $1 ----------" >> $loglive
+	find "$1" -type f | while read lol; do
+	while_log "| $(du -sah $lol | cut -f 1) | $lol"
+	done >> $loglive
+	echo "--------------------------------------" >> $log
+	echo " " >> $log
+	echo "--------------------------------------" >> $loglive
+	echo " " >> $loglive
+	}
+
+loadings() {
+  PID=$!
+  a=0;
+  while [ -d /proc/$PID ]; do
+    b=$((+1))
+    a=$((a+1))
+    sleep 0.9s
+    printf "\r${@} [${a}Second]"
+  done
+}
+
+loadingm() {
+  PID=$!
+  a=0
+  while [ -d /proc/$PID ]; do
+    b=$((a+1))
+    a=$((h+1))
+    sleep 59.9s
+    printf "\r${@} [${b}Minutes]"
+  done
+}
+
+loadingz() {
+  PID=$!
+  a=0
+  while [ -d /proc/$PID ]; do
+    b=$((a+1))
+    a=$((a+1))
+    sleep 0.9s
+    printf "#"
+  done
+}
+
+printmid() {
+  local CHAR=$(printf "$@" | sed 's|\\e[[0-9;]*m||g' | wc -m)
+  local hfCOLUMN=$((COLUMNS/2))
+  local hfCHAR=$((CHAR/2))
+  local indent=$((hfCOLUMN-hfCHAR))
+  echo "$(printf '%*s' "${indent}" '') $@"
+}
+
+setime(){
+	if [[ $1 == '-f' ]] && [ "$2" ] && [ $3 -eq $3 ]; then
+	   if [ -f "$2" ]; then
+	      touch -ct $3 "$2" 2>/dev/null || echo "setime: bad '$3': Value too large for defined data type"
+	   else
+	      echo "setime: $2: Is not file"
+	   fi
+	elif [[ $1 == '-r' ]] && [ "$2" ] && [ $3 -eq $3 ]; then
+	   if [ -d "$2" ]; then
+	      find "$2" -print | while read filename; do
+	      touch -ct $3 "$filename" 2>/dev/null || echo "setime: bad '$3': Value too large for defined data type"
+	      done
+	   else
+	      echo "setime: $2: Is not directory"
+	   fi
+	elif [[ $1 == '--version' ]] || [[ $1 == '-v' ]]; then
+	echo "setime v1.0 Copyright (C) 2020 wahyu kurniawan (wahyu6070)."
+    elif [[ $1 == '--help' ]] || [[ $1 == '-h' ]]; then
+    echo "usage : setime <options> <input> <datetime>"
+    echo " "
+    echo "example : setime -r /sdcard/download 202004081503"
+    echo " "
+    echo "options"
+    echo "-f                    file"
+    echo "-r                    change all directory and file"
+    echo "-v, --version         version"
+    echo "-h, --help            help"
+    echo " "
+    echo "setime v1.0 since 2020-04-09 Copyright (C) 2020 wahyu kurniawan (wahyu6070)."
+    else
+    echo "usage : setime --help"
+    fi
+}
+
 ########################################
 #    Kopi Script
 ########################################
@@ -55,8 +163,8 @@ else
   device_abpartition=false
   MOUNT_POINT=/system
 fi
-mount -o rw,remount $MOUNT_POINT || mount $MOUNT_POINT || mount -o rw,remount / && sar=1 || mount -o rw,remount -t auto $MOUNT_POINT || abort "- Abort mounting system"
-mount -o rw,remount /vendor || mount /vendor || mount -o rw,remount / && sar=1 || mount -o rw,remount -t auto /vendor || abort "- Abort mounting vendor"
+mount -o rw,remount $MOUNT_POINT || mount $MOUNT_POINT || mount -o rw,remount -t auto $MOUNT_POINT || mount -o rw,remount / || abort "- Abort mounting system"
+mount -o rw,remount /vendor || mount /vendor || mount -o rw,remount -t auto /vendor || mount -o rw,remount / || abort "- Abort mounting vendor"
 test -f /system/system/build.prop && root=/system/system;
 set_progress 0.4;
 
@@ -104,6 +212,7 @@ DEVICE=`getp device $MODULE`
 DATE=`getp date $MODULE`
 AUTHOR=`getp author $MODULE`
 KOPIMOD=/data/kopi/modules/"$ID"
+MAGISKMOD=/data/adb/modules/$ID
 set_progress 0.5;
 
 #req
@@ -121,18 +230,20 @@ $BOOTMODE && TYPEINSTALL=magisk || [ -f /data/adb/magisk/magisk ] && TYPEINSTALL
 fi
 
 # Uninstall
-if [ -f $KOPIMOD/uninstall.sh ] && [ $TYPEINSTALL != magisk ] && [ $(getp versioncode $KOPIMOD/module.prop) -eq $VERSIONCODE ]; then
-print "- Uninstalling $NAME"
-test -f $KOPIMOD/uninstall.sh && . $KOPIMOD/uninstall.sh || abort "- Uninstalling failed !"
-del $KOPIMOD
+if [ -f $KOPIMOD/uninstall.sh ] && [ $(cat $KOPIMOD/typeinstall) = kopi ] && [ $(getp versioncode $KOPIMOD/module.prop) -eq $VERSIONCODE ]; then
+	print "- Uninstalling $NAME"
+	test -f $KOPIMOD/uninstall.sh && . $KOPIMOD/uninstall.sh || abort "- Uninstalling failed !"
+	del $KOPIMOD
+	uninstallmode=true
 else
 # Installing
+	cdir $KOPIMOD
+	[ -f uninstall.sh ] && cp -pf uninstall.sh $KOPIMOD && chmod 775 $KOPIMOD/uninstall.sh;
+	echo "$TYPEINSTALL" > $KOPIMOD/typeinstall
+	[ -f module.prop ] && cp -pf module.prop $KOPIMOD;
+	[ -d bin ] && chmod -R 775 $MODPATH/bin;
 	[ -f install.sh ] && chmod 775 install.sh && . ./install.sh;
 	[ -f customize.sh ] && chmod 0775 customize.sh && . ./customize.sh;
-	[ -d bin ] && chmod -R 775 $MODPATH/bin;
-	cdir $KOPIMOD
-	[ -f uninstall.sh ] && cp -pf uninstall.sh $KOPIMOD && chmod 775 $KOPIMOD/uninstall.sh
-	[ -f module.prop ] && cp -pf module.prop $KOPIMOD
 	
 	case $TYPEINSTALL in
 	magisk)
@@ -144,7 +255,7 @@ else
 	cdir "/data/adb/modules/$ID"
 	touch "/data/adb/modules/$ID/update"
 	cp -pf $kopi/module.prop "/data/adb/modules/$ID/"
-	cp -af $kopi/* "$modup"
+	cp -rdf $kopi/* "$modup"
 	del $modup/META-INF
 	del $modup/install.sh
 	del $modup/customize.sh
@@ -153,26 +264,63 @@ else
 	;;
 	kopi)
 	print "- Type Kopi Module"
-	if [ -d $kopi/system/vendor ]; then
-	cdir $kopi/vendor
-	cp -af $kopi/system/vendor/* $kopi/vendor || abort "- Failed copying system/vendor";
-	del $kopi/system/vendor
+	#Creating list file or dir installed log
+	if [ -d $MODPATH/system ] && [ "$(ls -A $MODPATH/system)" ]; then
+		cd $MODPATH/system
+		for make_perm_sys in $(find *); do
+			echo "$make_perm_sys" >> $KOPIMOD/list_install_system
+		done
+	fi
+
+	if [ -d $MODPATH/vendor ] && [ "$(ls -A $MODPATH/vendor)" ]; then
+		cd $MODPATH/vendor
+		for make_perm_ven in $(find *); do
+			echo "$make_perm_ven" >> $KOPIMOD/list_install_vendor
+		done
+	fi
+	
+	#cp /system/vendor
+	if [ -d $kopi/system/vendor ] && [ "$(ls -A $kopi/system/vendor)" ]; then
+		cdir $kopi/vendor
+		cp -rdf $kopi/system/vendor/* $kopi/vendor/;
+		del $kopi/system/vendor
+	elif [ -d $kopi/system/vendor ] && [ ! "$(ls -A $kopi/system/vendor)" ]; then
+		del $kopi/system/vendor
 	fi;
-	if [ -d $kopi/system ]; then print "- Copying system"; cp -af $kopi/system/* $system || abort "- Failed copying system";fi;
-	if [ -d $kopi/vendor ]; then print "- Copying vendor"; cp -af $kopi/vendor/* /vendor || abort "- Failed copying vendor";fi;
-	set_progress 9.1;
+	
+	#cp /system
+	if [ -d $kopi/system ] && [ "$(ls -A $kopi/system)" ]; then
+		print "- Pushing system";
+		cp -rdf $kopi/system/* $system/;
+	fi;
+	#cp vendor
+	if [ -d $kopi/vendor ] && [ "$(ls -A $kopi/vendor)" ]; then
+		print "- Pushing vendor"; 
+		cp -rdf $kopi/vendor/* /vendor/;
+	fi;
+	set_progress 8.1;
 	;;
 	false)
-	print "- Type install manual" ;;
+		print "- Type install manual" ;;
 	*)
-	abort "- Type Install $TYPEINSTALL Not found"
+		abort "- Type Install $TYPEINSTALL Not found"
 	;;
 	esac
 fi
 
+#permissions
+if [ -f $kopi/permissions.sh ] && [ ! $uninstallmode ]; then
+print "- Set Permissions"
+chmod 775 $kopi/permissions.sh
+. $kopi/permissions.sh
+fi
+
 #umount
 print "- Umounting";
-[ $TYPEINSTALL = kopi ] && umount_all
+if [ $TYPEINSTALL = kopi ]; then
+umount /system
+umount /vendor
+fi
 set_progress 1.1;
 cd /;
 del $TMPDIR
