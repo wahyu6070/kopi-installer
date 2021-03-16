@@ -1,7 +1,7 @@
 #!/sbin/sh
-# Kopi Installer V1.0
+# Kopi Installer V1.1
 # Since 08-05-2020
-# Latest Update 30-08-2020
+# Latest Update 17-03-2021
 # by wahyu6070 (dont change)
 
 OUTFD=/proc/self/fd/$2;
@@ -134,6 +134,16 @@ setime(){
     fi
 }
 
+set_prop() {
+  property="$1"
+  value="$2"
+  file_location="$3"
+  if grep -q "${property}" "${file_location}"; then
+    sed -i "s/\(${property}\)=.*/\1=${value}/g" "${file_location}"
+  else
+    echo "${property}=${value}" >>"${file_location}"
+  fi
+}
 ########################################
 #    Kopi Script
 ########################################
