@@ -265,6 +265,10 @@ else
 	cdir "/data/adb/modules/$ID"
 	touch "/data/adb/modules/$ID/update"
 	cp -pf $kopi/module.prop "/data/adb/modules/$ID/"
+	[ -f $kopi/magisk-uninstall.sh ] && cp -pf $kopi/magisk-uninstall.sh $modup/uninstall.sh && chmod 755 $modup/uninstall.sh
+	[ -f $kopi/magisk-system.prop ] && cp -pf $kopi/magisk-system.prop $modup/system.prop
+	[ -f $kopi/magisk-service.sh ] && cp -pf $kopi/magisk-service.sh $modup/service.sh && chmod 755 $modup/service.sh
+	[ -f $kopi/magisk-post-fs-data.sh ] && cp -pf $kopi/magisk-post-fs-data.sh $modup/post-fs-data.sh && chmod 755 $modup/post-fs-data.sh
 	cp -rdf $kopi/* "$modup"
 	del $modup/META-INF
 	del $modup/install.sh
