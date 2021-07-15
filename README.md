@@ -1,5 +1,5 @@
 # Nashor kernel installer
-copy installer is an installer script that runs in magisk manager or recovery, which can be converted into a magisk module or kopi.
+copy installer is an installer script that runs in magisk manager or recovery, which can be converted into a magisk module or kopi module.
 
 # Variabel
 - ``MODPATH`` directory where the module is edited
