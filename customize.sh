@@ -1,4 +1,4 @@
-# Kopi installer script 1.0
+# Kopi installer script 1.6
 # Your script
 print " "
 print " Name      : $NAME"
