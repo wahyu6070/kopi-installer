@@ -1,7 +1,7 @@
 #!/sbin/sh
-# Kopi Installer V1.6
+# Kopi Installer V1.7
 # Since 08-05-2020
-# Latest Update 02-11-2021
+# Latest Update 10-11-2021
 # by wahyu6070 (dont change)
 
 OUTFD=/proc/self/fd/$2;
@@ -400,19 +400,47 @@ show_progress 1.34 0;
 
 #system dir
 if [ -f /system/system/build.prop ]; then
-system=/system/system
+	SYSTEM=/system/system
 elif [ -f /system_root/system/build.prop ]; then
-system=/system_root/system
+	SYSTEM=/system_root/system
 elif [ -f /system_root/build.prop ]; then
-system=/system_root
+	SYSTEM=/system_root
 else
-system=/system
+	SYSTEM=/system
+fi
+
+#vendor dir
+VENDOR=/vendor
+
+# /product dir (android 10+)
+if [ ! -L $SYSTEM/product ]; then
+	PRODUCT=$SYSTEM/product
+else
+	PRODUCT=/product
+fi
+
+# /system_ext dir (android 11+)
+if [ ! -L $SYSTEM/system_ext ]; then
+	SYSTEM_EXT=$SYSTEM/system_ext
+else
+	SYSTEM_EXT=/system_ext
 fi
 
 #Extract
-kopi=/dev/tmp/kopi
-MODPATH=$kopi
-TMPDIR=/dev/tmp
+cdir /data/kopi_test
+touch /data/kopi_test/kopi_test_file
+if [ $? -eq 0 ]; then
+	del /data/kopi_test/kopi_test_file
+	del /data/kopi_test
+	kopi=/data/tmp/kopi
+	MODPATH=$kopi
+	TMPDIR=/data/tmp
+else
+	kopi=/dev/tmp/kopi
+	MODPATH=$kopi
+	TMPDIR=/dev/tmp
+fi
+
 cdir $kopi || abort "! Failed create $kopi dir"
 cd $kopi
 print "- Extracting ZIP File"
@@ -421,7 +449,7 @@ unzip -o "$ZIPFILE" >&2
 [ ! -f module.prop ] && abort "- Module.prop Not Found"
 
 #prop
-prop=$system/build.prop
+prop=$SYSTEM/build.prop
 API=`getp ro.build.version.sdk $prop`
 ABI=`getp ro.product.cpu.abi $prop | cut -c-3`
 ABI2=`getp ro.product.cpu.abi2 $prop | cut -c-3`
@@ -456,6 +484,7 @@ fi
 #Type install
 if [ $(getp typeinstall $MODULE) = kopi ]; then TYPEINSTALL=kopi
 elif [ -f /sdcard/force_kopi ]; then TYPEINSTALL=kopi
+elif [ -f /dev/force_kopi ]; then TYPEINSTALL=kopi
 elif [ $(getp typeinstall $MODULE) = magisk ]; then TYPEINSTALL=magisk
 elif [ $(getp typeinstall $MODULE) = false ]; then TYPEINSTALL=false
 else
@@ -528,70 +557,48 @@ else
 	;;
 	kopi)
 	print "- Type Kopi Module"
+	
+	for MV_DIR in vendor product system_ext; do
+		if [ -d $kopi/system/$MV_DIR ] && [ "$(ls -A $kopi/system/$MV_DIR)" ]; then
+			test ! -d $kopi/$MV_DIR && cdir $kopi/$MV_DIR
+			cp -rdf $kopi/system/$MV_DIR/* $kopi/$MV_DIR/
+			del del $kopi/system/$MV_DIR
+		elif [ -d $kopi/system/$MV_DIR ] && [ ! "$(ls -A $kopi/system/$MV_DIR)" ]; then
+			del $kopi/system/$MV_DIR
+		fi
+	done
+	
 	#Creating list file or dir installed log
-	if [ -d $MODPATH/system ] && [ "$(ls -A $MODPATH/system)" ]; then
-		cd $MODPATH/system
-		for make_perm_sys in $(find *); do
-			echo "$make_perm_sys" >> $KOPIMOD/list_install_system
-		done
-	fi
-
-	if [ -d $MODPATH/vendor ] && [ "$(ls -A $MODPATH/vendor)" ]; then
-		cd $MODPATH/vendor
-		for make_perm_ven in $(find *); do
-			echo "$make_perm_ven" >> $KOPIMOD/list_install_vendor
-		done
-	fi
+	for MAKE_LIST in system vendor product system_ext; do
+		if [ -d $MODPATH/$MAKE_LIST ] && [ "$(ls -A $MODPATH/$MAKE_LIST)" ]; then
+			cd $MODPATH/$MAKE_LIST
+			for MAKE_LIST_FILE in $(find *); do
+				echo "$MAKE_LIST_FILE" >> $KOPIMOD/list_install_$MAKE_LIST
+			done
+		fi
+	done
 	
-	#cp /system/vendor
-	if [ -d $kopi/system/vendor ] && [ "$(ls -A $kopi/system/vendor)" ]; then
-		cdir $kopi/vendor
-		cp -rdf $kopi/system/vendor/* $kopi/vendor/;
-		del $kopi/system/vendor
-	elif [ -d $kopi/system/vendor ] && [ ! "$(ls -A $kopi/system/vendor)" ]; then
-		del $kopi/system/vendor
-	fi;
-	
-	
-	#cp /system/product
-	if [ -d $kopi/system/product ] && [ "$(ls -A $kopi/system/product)" ]; then
-		cdir $kopi/product
-		cp -rdf $kopi/system/product/* $kopi/product/;
-		del $kopi/system/product
-	elif [ -d $kopi/system/product ] && [ ! "$(ls -A $kopi/system/product)" ]; then
-		del $kopi/system/product
-	fi;
-	
-	#cp /system/system_ext
-	if [ -d $kopi/system/system_ext ] && [ "$(ls -A $kopi/system/system_ext)" ]; then
-		cdir $kopi/system_ext
-		cp -rdf $kopi/system/system_ext/* $kopi/system_ext/;
-		del $kopi/system/system_ext
-	elif [ -d $kopi/system/system_ext ] && [ ! "$(ls -A $kopi/system/system_ext)" ]; then
-		del $kopi/system/systen_ext
-	fi;
-	
-	#cp /system
-	if [ -d $kopi/system ] && [ "$(ls -A $kopi/system)" ]; then
+	#cp system
+	if [ -d $kopi/system ] && ! rmdir $kopi/system 2>/dev/null; then
 		print "- Pushing system";
-		cp -rdf $kopi/system/* $system/;
+		cp -rdf $kopi/system/* $SYSTEM/;
 	fi;
 	#cp vendor
-	if [ -d $kopi/vendor ] && [ "$(ls -A $kopi/vendor)" ]; then
-		print "- Pushing vendor"; 
-		cp -rdf $kopi/vendor/* /vendor/;
+	if [ -d $kopi/vendor ] && ! rmdir $kopi/vendor 2>/dev/null; then
+		print "- Pushing vendor";
+		cp -rdf $kopi/vendor/* $VENDOR/;
 	fi;
 	
-	#product
-	if [ -d $kopi/product ] && [ "$(ls -A $kopi/product)" ]; then
-		print "- Pushing product"; 
-		cp -rdf $kopi/product/* /product/;
+	#cp product
+	if [ -d $kopi/product ] && ! rmdir $kopi/product 2>/dev/null; then
+		print "- Pushing product";
+		cp -rdf $kopi/product/* $PRODUCT/;
 	fi;
 	
-	#system_ext
-	if [ -d $kopi/system_ext ] && [ "$(ls -A $kopi/system_ext)" ]; then
-		print "- Pushing system_ext"; 
-		cp -rdf $kopi/system_ext/* /system_ext/;
+	#cp system_ext
+	if [ -d $kopi/system_ext ] && ! rmdir $kopi/system_ext 2>/dev/null; then
+		print "- Pushing system_ext";
+		cp -rdf $kopi/system_ext/* $SYSTEM_EXT/;
 	fi;
 	set_progress 8.1;
 	;;
