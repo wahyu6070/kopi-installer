@@ -1,5 +1,5 @@
-# Kopi kernel installer
-copy installer is an installer script that runs in magisk manager or recovery, which can be converted into a magisk module or kopi module.
+# kopi installwr
+kopi installer is an installer script that runs in magisk manager or recovery, which can be converted into a magisk module or kopi module.
 
 # Variabel
 - ``MODPATH`` directory where the module is edited
@@ -19,7 +19,12 @@ copy installer is an installer script that runs in magisk manager or recovery, w
 
 # Example script
 [module.prop](https://github.com/litegapps/litegapps/blob/main/core/utils/kopi/module.prop)
+ 
 [customize.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/customize.sh)
+ 
 [install.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/install.sh)
+ 
 [permissions.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/kopi/permissions.sh)
+ 
 [uninstall.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/kopi/uninstall.sh)
+ 
