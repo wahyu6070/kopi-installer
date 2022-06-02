@@ -22,7 +22,7 @@ kopi installer is an installer script that runs in magisk manager or recovery, w
  
 [customize.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/customize.sh)
  
-[install.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/install.sh)
+[install.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/kopi/nstall.sh)
  
 [permissions.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/kopi/permissions.sh)
  
