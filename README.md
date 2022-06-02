@@ -16,3 +16,10 @@ copy installer is an installer script that runs in magisk manager or recovery, w
 - ``DEVICE`` Device Name
 - ``DATE`` Date module build
 - ``AUTHOR`` Author Module
+
+# Example script
+[module.prop](https://github.com/litegapps/litegapps/blob/main/core/utils/kopi/module.prop)
+[customize.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/customize.sh)
+[install.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/install.sh)
+[permissions.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/kopi/permissions.sh)
+[uninstall.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/kopi/uninstall.sh)
