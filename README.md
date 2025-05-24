@@ -25,7 +25,7 @@ kopi installer is an installer script that runs in **Systemless Mode** or **reco
 
 
 # Example script
-[module.prop](https://github.com/litegapps/litegapps/blob/main/core/utils/kopi/module.prop)
+[module.prop](https://github.com/wahyu6070/aapt/blob/main/module.prop)
  
 [customize.sh](https://github.com/litegapps/litegapps/blob/main/core/utils/customize.sh)
  
