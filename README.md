@@ -1,12 +1,18 @@
 # kopi installer
-kopi installer is an installer script that runs in magisk manager or recovery, which can be converted into a magisk module or kopi module.
+kopi installer is an installer script that runs in **Systemless Mode** or **recovery Mode**, Support Magisk, KernelSU, APatch, twrp, orangefox or other installation places.
 
-# Variabel
+## Mode
+**Systemless Mode** : Installation that can only be installed in **magisk*,**kernelsu** and **apatch** which are read as systemless modules.
+
+**Recovery Mode** : Installation that can only be installed in recovery such as **TWRP**, **OrangeFox** or other recoveries are read as non-systemless which are installed directly through the partition.
+
+
+## Variabel
 - ``MODPATH`` directory where the module is edited
-- ``MAGISKMOD`` magisk module directory after installing module (/data/adb/modules/"id name module")
-- ``MAGISKUP`` magisk module directory before installing module (/data/adb/modules_update/"id name module")
+- ``SYSTEMLESSMOD`` magisk module directory after installing module (/data/adb/modules/"id name module")
+- ``SYSTEMLESSUP`` magisk module directory before installing module (/data/adb/modules_update/"id name module")
 - ``KOPIMOD`` kopi module directory (/data/kopi/modules/"id name modules")
-- ``TYPEINSTALL`` Type install module (magisk,kopi,false)
+- ``TYPEINSTALL`` Type install module (systemless,kopi,false)
 - ``API`` Android SDK Code
 - ``ARCH`` Architecture
 - ``ID`` Id name module
@@ -16,6 +22,7 @@ kopi installer is an installer script that runs in magisk manager or recovery, w
 - ``DEVICE`` Device Name
 - ``DATE`` Date module build
 - ``AUTHOR`` Author Module
+
 
 # Example script
 [module.prop](https://github.com/litegapps/litegapps/blob/main/core/utils/kopi/module.prop)
